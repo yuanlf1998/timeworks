@@ -1,0 +1,20 @@
+[project]
+name = "timeworks"
+version = "0.1.0"
+description = "A toolkit for time-series preprocessing, metrics computation, and experiment utilities."
+authors = [
+    { name="Linfeng", email="your_email@example.com" }
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+
+dependencies = [
+    "numpy",
+    "torch",
+    "matplotlib",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
