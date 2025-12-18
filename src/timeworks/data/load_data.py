@@ -22,11 +22,13 @@ dict_622 = {'train': {'start': 0, 'end': 0.6},
             }
 
 
-def read_raw(dataset_name: str, flag='train', norm=True, style='traditional', outlier_threshold=0.99) -> pd.DataFrame:
+def read_raw(dataset_name: str, flag='train', norm=True, style='traditional',
+             window_size=96, outlier_threshold=0.99) -> pd.DataFrame:
     """
         读csv, train test split, norm
         2025/12/16 适配 tfb 的长度
         2025/12/17 增加 clean_outliers逻辑
+        2025/12/18 增加 train_y/test_x flag，支持自定义 window_size shift
     """
     if dataset_name in dataset_config.tfb_datasets:
         folder = dataset_config.tfb_root_path
@@ -58,8 +60,24 @@ def read_raw(dataset_name: str, flag='train', norm=True, style='traditional', ou
         
     split_method = dataset_info.split
     index_dict = dict_712 if split_method == '712' else dict_622
-    start_idx = int(index_dict[flag]['start'] * n)
-    end_idx = int(index_dict[flag]['end'] * n)
+    # Some flags are derived by shifting existing splits by `window_size`.
+    flag_shift_map = {
+        'train_y': ('train', window_size),
+        'test_x': ('test', -window_size),
+    }
+    effective_flag, shift = flag_shift_map.get(flag, (flag, 0))
+
+    if effective_flag not in index_dict:
+        raise ValueError(f"Unsupported flag '{flag}'.")
+
+    start_idx = int(index_dict[effective_flag]['start'] * n) + shift
+    end_idx = int(index_dict[effective_flag]['end'] * n) + shift
+
+    if start_idx < 0 or end_idx > len(df):
+        raise ValueError(
+            f"Shifted range [{start_idx}, {end_idx}) exceeds dataset length {len(df)}. "
+            f"Please check flag '{flag}' and window_size={window_size}."
+        )
 
     # slice
     target = df.iloc[start_idx: end_idx]
@@ -114,7 +132,7 @@ def load_data(dataset_name: str, flag='train', window_size=96, style='traditiona
     """
     # read raw
     cprint('Loading data', verbose)
-    data = read_raw(dataset_name, flag, norm=norm, style=style)
+    data = read_raw(dataset_name, flag, norm=norm, style=style, window_size=window_size)
 
     def clean_outliers(data: np.ndarray) -> np.ndarray:
         """

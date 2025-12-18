@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from timeworks.utils.cprint import cprint
 from timeworks.data import load_data
+from timeworks.preprocessing.drop_plat import remove_plat
 
 device = torch.device('cuda')
 
@@ -32,28 +33,6 @@ def calc_pair_k(x, y):
 
     ks = Dy / Dx
     return ks
-
-
-def remove_plat(data_windowed, y_pred=None):
-    '''
-    x: (N, W)
-    '''
-    # 需要同时考虑x, y
-    assert len(data_windowed.shape) == 2
-    data_diff = np.diff(data_windowed, axis=1)
-    plat_count = np.where(data_diff == 0, 1, 0).sum(axis=1)
-
-    # x 和 y 都得满足
-    if y_pred is None:
-        cond_x = plat_count[:-96] < 48
-        cond_y = plat_count[96:] < 48
-        idx = np.logical_and(cond_x, cond_y)
-
-        return data_windowed[:-96][idx],  data_windowed[96:][idx]
-
-    else:
-        cond_x = plat_count < 48
-        return data_windowed[cond_x], y_pred[cond_x]
 
 
 def calc_k(data_windowed: np.ndarray, pred: np.ndarray, interval=20,
@@ -127,11 +106,30 @@ def calc_k(data_windowed: np.ndarray, pred: np.ndarray, interval=20,
             return result
         
 
-def dataset_k(dataset_name: str, flag='train'):
-    # load dataset 
-    dataset = load_data(dataset_name, flag)
-    
+def dataset_k(dataset_name: str, flag='train', look_ahead=96, **calc_kwargs):
+    """
+    Convenience helper that computes the dataset's intrinsic Lipschitz k by
+    pairing consecutive windows from the same dataset (shifted by `look_ahead`).
 
+    Parameters
+    ----------
+    dataset_name :
+        Name present in `dataset_config`.
+    flag :
+        Split flag passed down to `load_data`.
+    look_ahead :
+        Gap between the input/output windows, defaulting to 96 steps.
+    calc_kwargs :
+        Additional keyword arguments forwarded to `calc_k`.
+    """
+    dataset = load_data(dataset_name, flag)
+    if len(dataset) <= look_ahead:
+        raise ValueError("Dataset is shorter than the requested look_ahead shift.")
+
+    x = dataset[:-look_ahead]
+    y = dataset[look_ahead:]
+    return calc_k(x, y, **calc_kwargs)
+    
 
 if __name__ == '__main__':
     folder = '/home/yuanlinfeng/data/prediction/ETTm1/PatchTST'
