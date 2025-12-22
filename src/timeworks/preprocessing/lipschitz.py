@@ -104,7 +104,41 @@ def calc_k(data_windowed: np.ndarray, pred: np.ndarray, interval=20,
             return result, k_matrix
         else:
             return result
-        
+
+
+def calc_k_pair(data_windowed: np.ndarray, y_true: np.ndarray, pred: np.ndarray,
+                interval=20, q=100, channel_independence=True,
+                preprocess=True, verbose=False, return_matrix=True):
+    """
+    Compute k for (data, y_true) and (data, pred) with optional matrices.
+
+    Returns (k_true, k_pred, k_matrix_true, k_matrix_pred) when return_matrix is True,
+    otherwise returns (k_true, k_pred).
+    """
+    k_true, k_matrix_true = calc_k(
+        data_windowed,
+        y_true,
+        interval=interval,
+        q=q,
+        channel_independence=channel_independence,
+        preprocess=preprocess,
+        verbose=verbose,
+        return_matrix=True,
+    )
+    k_pred, k_matrix_pred = calc_k(
+        data_windowed,
+        pred,
+        interval=interval,
+        q=q,
+        channel_independence=channel_independence,
+        preprocess=preprocess,
+        verbose=verbose,
+        return_matrix=True,
+    )
+    if return_matrix:
+        return k_true, k_pred, k_matrix_true, k_matrix_pred
+    return k_true, k_pred
+
 
 def dataset_k(dataset_name: str, flag='train', look_ahead=96, **calc_kwargs):
     """

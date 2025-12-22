@@ -22,6 +22,7 @@ __version__ = _resolve_version()
 # Convenience re-exports for the most frequently used helpers.
 from .data import load_data, norm, read_raw, dataset_config  # noqa: E402
 from .metrics.error_measure import mse  # noqa: E402
+from .preprocessing import remove_plat, calc_k, dataset_k, decode_data  # noqa: E402
 from .utils.cprint import cprint  # noqa: E402
 
 # Re-export subpackages to make them easy to discover from the root package.
@@ -37,6 +38,10 @@ __all__ = [
     "metrics",
     "mse",
     "norm",
+    "remove_plat",
+    "calc_k",
+    "dataset_k",
+    "decode_data",
     "preprocessing",
     "read_raw",
     "utils",

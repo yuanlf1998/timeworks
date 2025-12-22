@@ -3,7 +3,11 @@
 import numpy as np
 
 
-def remove_plat(data_windowed: np.ndarray, y_pred: np.ndarray | None = None):
+def remove_plat(
+    data_windowed: np.ndarray,
+    y_pred: np.ndarray | None = None,
+    return_idx: bool = False,
+):
     """
     Filter out samples whose difference along the time dimension stays mostly flat.
 
@@ -14,6 +18,8 @@ def remove_plat(data_windowed: np.ndarray, y_pred: np.ndarray | None = None):
     y_pred :
         Optional array shaped (N, W) aligned with `data_windowed`. When provided,
         the same indexes are applied to `y_pred`.
+    return_idx :
+        When True, also return the boolean mask used for filtering.
     """
     assert len(data_windowed.shape) == 2
     data_diff = np.diff(data_windowed, axis=1)
@@ -21,9 +27,11 @@ def remove_plat(data_windowed: np.ndarray, y_pred: np.ndarray | None = None):
 
     cond_x = plat_count < 48
     if y_pred is None:
-        return data_windowed[cond_x]
-    else: 
-        return data_windowed[cond_x], y_pred[cond_x]
+        filtered = data_windowed[cond_x]
+        return (filtered, cond_x) if return_idx else filtered
+
+    filtered = data_windowed[cond_x], y_pred[cond_x]
+    return (*filtered, cond_x) if return_idx else filtered
 
 
 __all__ = ["remove_plat"]

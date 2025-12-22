@@ -78,7 +78,13 @@ def decode_data(src_dir: str, dst_folder: str = '/home/yuanlinfeng/data/predicti
 
 # test 
 if __name__ == '__main__':
-    filepath_list = ['/home/yuanlinfeng/code/TFB-master/result/ETTm1/PatchTST/PatchTST.1765868643.e0562d6a3a084a03.2785801.csv.tar.gz']
+    filepath_list = ['/home/yuanlinfeng/code/TFB-master/result/ETTm2/Crossformer/Crossformer.1766398221.e0562d6a3a084a03.1241839.csv.tar.gz',
+                     '/home/yuanlinfeng/code/TFB-master/result/ETTm2/DUET/DUET.1766392842.e0562d6a3a084a03.1045571.csv.tar.gz', 
+                     '/home/yuanlinfeng/code/TFB-master/result/ETTm2/FiLM/FiLM.1766397432.e0562d6a3a084a03.1052239.csv.tar.gz', 
+                     '/home/yuanlinfeng/code/TFB-master/result/ETTm2/Informer/Informer.1766397581.e0562d6a3a084a03.1223438.csv.tar.gz', 
+                     '/home/yuanlinfeng/code/TFB-master/result/ETTm2/MICN/MICN.1766397717.e0562d6a3a084a03.1228790.csv.tar.gz', 
+                     '/home/yuanlinfeng/code/TFB-master/result/ETTm2/PatchTST/PatchTST.1766398336.e0562d6a3a084a03.1251981.csv.tar.gz', 
+                     '/home/yuanlinfeng/code/TFB-master/result/ETTm2/TimesNet/TimesNet.1766397938.e0562d6a3a084a03.1233870.csv.tar.gz']
     for filepath in filepath_list:
     # filepath = '/home/yuanlinfeng/code/TFB-master/result/ETTm1/Crossformer/Crossformer.1765166214.e0562d6a3a084a03.2947050.csv.tar.gz'
         decode_data(filepath)
