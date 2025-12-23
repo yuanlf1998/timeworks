@@ -56,6 +56,9 @@ def read_raw(dataset_name: str, flag='train', norm=True, style='traditional',
         # 从 meta 文件获取长度
         filepath = dataset_config.tfb_root_path + 'FORECAST_META.csv'
         meta_data = pd.read_csv(filepath) 
+        # 处理下大小写问题
+        if dataset_name in ['electricity', 'traffic']:
+            dataset_name = dataset_name[0].upper() + dataset_name[1:]
         n = meta_data[meta_data['file_name']==dataset_name + '.csv']['length'].item()
         
     split_method = dataset_info.split
