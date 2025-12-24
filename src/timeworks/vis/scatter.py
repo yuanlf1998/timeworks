@@ -36,15 +36,16 @@ def lists_to_df(dataset_names: List[str], **metrics: List[float]) -> pd.DataFram
     return pd.DataFrame(data)
 
 
-
-
 def scatter_from_df(
     df: pd.DataFrame,
     *,
     x_label_name: str,
     y_label_name: str,
     dataset_name: str = "dataset",
+    colors: List[float] | None = None,
+    cmap: str = "coolwarm",
     figsize: Tuple[int, int] = (10, 6),
+    ax: plt.Axes | None = None,
     annotate: bool = True,
     point_size: int = 100,
     alpha: float = 0.7,
@@ -62,13 +63,26 @@ def scatter_from_df(
         Column name used for y-axis.
     dataset_name : str
         Column name used for point labels.
+    colors : List[float] | None
+        Optional color values aligned with `dataset_name`.
+    cmap : str
+        Matplotlib colormap name used when `colors` is provided.
+    ax : plt.Axes | None
+        Optional axes to draw on. When omitted, a new figure is created.
     """
-    fig, ax = plt.subplots(figsize=figsize)
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.figure
 
     x = df[x_label_name]
     y = df[y_label_name]
 
-    ax.scatter(x, y, s=point_size, alpha=alpha)
+    if colors is None:
+        scatter = ax.scatter(x, y, s=point_size, alpha=alpha)
+    else:
+        scatter = ax.scatter(x, y, s=point_size, alpha=alpha, c=colors, cmap=cmap)
+        fig.colorbar(scatter, ax=ax)
 
     if annotate:
         for _, row in df.iterrows():
