@@ -106,6 +106,12 @@ def scatter_from_df(
     return fig, ax
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+from typing import List, Tuple
+from scipy.stats import pearsonr, spearmanr
+
+
 def scatter_with_regression(
     x: List[float] | np.ndarray,
     y: List[float] | np.ndarray,
@@ -124,22 +130,14 @@ def scatter_with_regression(
     rankic_method: str = "pearson",
     show_rankic_in_title: bool = True,
     grid_alpha: float = 0.3,
+    # ⭐ 新增：是否启用 outlier clipping
+    clip_outliers: bool = True,
+    q_low: float = 0.01,
+    q_high: float = 0.99,
 ):
     """
     Scatter plot with optional regression line and RankIC.
-
-    Parameters
-    ----------
-    x : List[float] | np.ndarray
-        x values.
-    y : List[float] | np.ndarray
-        y values.
-    ax : plt.Axes | None
-        Optional axes to draw on. When omitted, a new figure is created.
-    rankic_method : str
-        "pearson" or "spearman".
-    show_rankic_in_title : bool
-        Append RankIC to title when True.
+    Supports optional percentile-based outlier clipping.
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
@@ -149,12 +147,31 @@ def scatter_with_regression(
     x = np.asarray(x)
     y = np.asarray(y)
 
+    # ----- 1️⃣ nan-safe -----
     mask = np.isfinite(x) & np.isfinite(y)
     x = x[mask]
     y = y[mask]
 
+    # ----- 2️⃣ ⭐ 可选 outlier clipping -----
+    if clip_outliers and len(x) > 10:
+
+        # x 方向
+        x_lo, x_hi = np.quantile(x, [q_low, q_high])
+        mask_x = (x >= x_lo) & (x <= x_hi)
+
+        # y 方向
+        y_lo, y_hi = np.quantile(y, [q_low, q_high])
+        mask_y = (y >= y_lo) & (y <= y_hi)
+
+        # 共同保留
+        mask = mask_x & mask_y
+        x = x[mask]
+        y = y[mask]
+
+    # ----- 3️⃣ 画散点 -----
     ax.scatter(x, y, s=point_size, alpha=alpha, color=color)
 
+    # ----- 4️⃣ 拟合 + RankIC -----
     if len(x) >= 2:
         a, b = np.polyfit(x, y, 1)
         xs = np.linspace(x.min(), x.max(), 200)
@@ -177,6 +194,7 @@ def scatter_with_regression(
         rho = float("nan")
         rho_str = "nan"
 
+    # ----- 5️⃣ 标题 -----
     if show_rankic_in_title:
         if title is None:
             title = f"RankIC={rho_str}"
@@ -192,6 +210,7 @@ def scatter_with_regression(
 
     ax.grid(alpha=grid_alpha)
     fig.tight_layout()
+
     return fig, ax, rho
 
 if __name__ == '__main__':
