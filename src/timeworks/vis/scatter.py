@@ -3,8 +3,11 @@
 # Date: 2025-12-18
 
 
-import pandas as pd
 from typing import List, Tuple
+
+import numpy as np
+import pandas as pd
+from scipy.stats import pearsonr, spearmanr
 
 import matplotlib.pyplot as plt
 
@@ -101,6 +104,95 @@ def scatter_from_df(
 
     fig.tight_layout()
     return fig, ax
+
+
+def scatter_with_regression(
+    x: List[float] | np.ndarray,
+    y: List[float] | np.ndarray,
+    *,
+    ax: plt.Axes | None = None,
+    figsize: Tuple[int, int] = (6, 4),
+    point_size: int = 12,
+    alpha: float = 0.7,
+    color: str = "tab:blue",
+    line_color: str = "#2e3f8f",
+    line_style: str = "--",
+    line_width: float = 2.5,
+    x_label: str | None = None,
+    y_label: str | None = None,
+    title: str | None = None,
+    rankic_method: str = "pearson",
+    show_rankic_in_title: bool = True,
+    grid_alpha: float = 0.3,
+):
+    """
+    Scatter plot with optional regression line and RankIC.
+
+    Parameters
+    ----------
+    x : List[float] | np.ndarray
+        x values.
+    y : List[float] | np.ndarray
+        y values.
+    ax : plt.Axes | None
+        Optional axes to draw on. When omitted, a new figure is created.
+    rankic_method : str
+        "pearson" or "spearman".
+    show_rankic_in_title : bool
+        Append RankIC to title when True.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    else:
+        fig = ax.figure
+
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    mask = np.isfinite(x) & np.isfinite(y)
+    x = x[mask]
+    y = y[mask]
+
+    ax.scatter(x, y, s=point_size, alpha=alpha, color=color)
+
+    if len(x) >= 2:
+        a, b = np.polyfit(x, y, 1)
+        xs = np.linspace(x.min(), x.max(), 200)
+        ax.plot(
+            xs,
+            a * xs + b,
+            line_style,
+            color=line_color,
+            linewidth=line_width,
+            alpha=0.95,
+            zorder=5,
+        )
+
+        if rankic_method == "spearman":
+            rho, _ = spearmanr(x, y)
+        else:
+            rho, _ = pearsonr(x, y)
+        rho_str = f"{rho:.3f}"
+    else:
+        rho = float("nan")
+        rho_str = "nan"
+
+    if show_rankic_in_title:
+        if title is None:
+            title = f"RankIC={rho_str}"
+        else:
+            title = f"{title}  (RankIC={rho_str})"
+
+    if x_label:
+        ax.set_xlabel(x_label)
+    if y_label:
+        ax.set_ylabel(y_label)
+    if title:
+        ax.set_title(title)
+
+    ax.grid(alpha=grid_alpha)
+    fig.tight_layout()
+    return fig, ax, rho
 
 if __name__ == '__main__':
     df = lists_to_df(
